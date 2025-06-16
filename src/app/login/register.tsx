@@ -3,7 +3,6 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,47 +16,79 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
-  CheckCircle,
+  User,
+  Phone,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
-// Pre-defined particle properties to avoid Math.random()
-const particles = Array.from({ length: 20 }, (_, i) => ({
-  left: `${(i * 5) % 100}%`, // Spread particles evenly (0%, 5%, 10%, ..., 95%)
-  top: `${(i * 10) % 100}%`, // Different vertical positions
-  animationDelay: `${(i % 5) * 1}s`, // Delays: 0s, 1s, 2s, 3s, 4s
-  animationDuration: `${3 + (i % 4)}s`, // Durations: 3s, 4s, 5s, 6s
-}));
-
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [loginError, setLoginError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [registerError, setRegisterError] = useState("");
   const [isVisible, setIsVisible] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setLoginError("");
+    setRegisterError("");
 
-    // Simular autenticação
+    // Basic validation
+    if (!fullName || !email || !phone || !password || !confirmPassword) {
+      setRegisterError("Por favor, preencha todos os campos.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setRegisterError("As senhas não coincidem.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!agreeTerms) {
+      setRegisterError("Você deve concordar com os termos e condições.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Simple email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setRegisterError("Por favor, insira um email válido.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Simple phone validation (example: accepts formats like +244 123 456 789 or 123456789)
+    const phoneRegex = /^\+?\d{9,15}$/;
+    if (!phoneRegex.test(phone.replace(/\s/g, ""))) {
+      setRegisterError("Por favor, insira um número de telefone válido.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Simulate registration
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    if (email === "josefina.manuel@pn.gov.ao" && password === "jose123") {
-      // Login bem-sucedido
+    // Mock successful registration
+    if (email && password) {
       setIsLoading(false);
-      router.push("/painel"); // Redirect to dashboard
+      // Here you would redirect to a success page or login page
+      setRegisterError("");
+      // Example: router.push('/dashboard');
     } else {
-      setLoginError("Email ou senha incorretos");
+      setRegisterError("Erro ao criar conta. Tente novamente.");
       setIsLoading(false);
     }
   };
@@ -131,15 +162,15 @@ export default function LoginScreen() {
 
       {/* Floating Particles */}
       <div className="absolute inset-0">
-        {particles.map((particle, i) => (
+        {[...Array(20)].map((_, i) => (
           <div
             key={i}
             className="absolute w-2 h-2 bg-white rounded-full opacity-10 animate-float"
             style={{
-              left: particle.left,
-              top: particle.top,
-              animationDelay: particle.animationDelay,
-              animationDuration: particle.animationDuration,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${3 + Math.random() * 4}s`,
             }}
           />
         ))}
@@ -151,15 +182,34 @@ export default function LoginScreen() {
             isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
           }`}
         >
-          {/* Login Card */}
+          {/* Register Card */}
           <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
             <CardHeader className="text-center pb-4">
-              <h2 className="text-2xl font-bold text-white">ACESSAR O SISTEMA</h2>
+              <h2 className="text-2xl font-bold text-white">CRIAR CONTA</h2>
               <p className="text-blue-100 text-sm">COFRE DE PROVIDÊNCIAS</p>
             </CardHeader>
 
             <CardContent className="space-y-6">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleRegister} className="space-y-4">
+                {/* Full Name Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-white text-sm font-medium">
+                    Nome Completo
+                  </Label>
+                  <div className="relative group">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 w-4 h-4 group-focus-within:text-white transition-colors" />
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="Seu nome completo"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-white/40 focus:bg-white/20 transition-all duration-300"
+                      required
+                    />
+                  </div>
+                </div>
+
                 {/* Email Field */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-white text-sm font-medium">
@@ -173,6 +223,25 @@ export default function LoginScreen() {
                       placeholder="seu.email@pna.gov.ao"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-white/40 focus:bg-white/20 transition-all duration-300"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Number Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-white text-sm font-medium">
+                    Telefone
+                  </Label>
+                  <div className="relative group">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 w-4 h-4 group-focus-within:text-white transition-colors" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+244 123 456 789"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-white/40 focus:bg-white/20 transition-all duration-300"
                       required
                     />
@@ -205,36 +274,58 @@ export default function LoginScreen() {
                   </div>
                 </div>
 
-                {/* Remember Me & Forgot Password */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) => setRememberMe(checked === true)}
-                      className="border-white/20 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                {/* Confirm Password Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-white text-sm font-medium">
+                    Confirmar Senha
+                  </Label>
+                  <div className="relative group">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 w-4 h-4 group-focus-within:text-white transition-colors" />
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirme sua senha"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-white/40 focus:bg-white/20 transition-all duration-300"
+                      required
                     />
-                    <Label htmlFor="remember" className="text-sm text-blue-100">
-                      Lembrar-me
-                    </Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white transition-colors"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="text-sm text-blue-200 hover:text-white transition-colors underline"
-                  >
-                    Esqueceu a senha?
-                  </button>
+                </div>
+
+                {/* Terms and Conditions Checkbox */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={agreeTerms}
+                    onCheckedChange={(checked) => setAgreeTerms(checked === true)}
+                    className="border-white/20 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  />
+                  <Label htmlFor="terms" className="text-sm text-blue-100">
+                    Concordo com os <a href="#" className="underline hover:text-white">termos e condições</a>
+                  </Label>
                 </div>
 
                 {/* Error Message */}
-                {loginError && (
+                {registerError && (
                   <div className="flex items-center gap-2 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
                     <AlertCircle className="w-4 h-4 text-red-300" />
-                    <span className="text-red-200 text-sm">{loginError}</span>
+                    <span className="text-red-200 text-sm">{registerError}</span>
                   </div>
                 )}
 
-                {/* Login Button */}
+                {/* Register Button */}
                 <Button
                   type="submit"
                   disabled={isLoading}
@@ -243,11 +334,11 @@ export default function LoginScreen() {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Entrando...
+                      Criando Conta...
                     </>
                   ) : (
                     <>
-                      Entrar no Sistema
+                      Criar Conta
                       <ChevronRight className="w-4 h-4 ml-2" />
                     </>
                   )}
@@ -264,18 +355,17 @@ export default function LoginScreen() {
                 </div>
               </div>
 
-              {/* Register Link */}
+              {/* Login Link */}
               <p className="text-center text-sm text-blue-100">
-                Não tem uma conta?{" "}
-                <Link
-                  href="/register"
-                  className="text-blue-200 hover:text-white underline transition-colors"
-                >
-                  Criar
-                </Link>
+                Já tem uma conta?{" "}
+                <a href="/login" className="text-blue-200 hover:text-white underline transition-colors">
+                  Faça login
+                </a>
               </p>
             </CardContent>
           </Card>
+
+         
         </div>
       </div>
     </div>

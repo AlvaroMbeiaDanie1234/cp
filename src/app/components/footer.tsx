@@ -19,8 +19,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center transition-transform hover:scale-105">
-                <Shield className="w-7 h-7" />
+              <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center transition-transform hover:scale-105">
+                <img src="/images/logo.png" alt="" />
               </div>
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight">Polícia Nacional</h3>
