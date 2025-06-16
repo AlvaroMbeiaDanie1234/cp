@@ -51,7 +51,7 @@ export default function LoginScreen() {
     // Simular autenticação
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    if (email === "admin@pn.gov.ao" && password === "admin") {
+    if (email === "josefina.manuel@pn.gov.ao" && password === "jose123") {
       // Login bem-sucedido
       setIsLoading(false);
       router.push("/painel"); // Redirect to dashboard
