@@ -201,7 +201,8 @@ export default function UserDashboard() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-6">
                       <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/20">
-                        <img
+                        <Image
+                            property="foto"
                           src={userData.foto || "/placeholder.svg"}
                           alt="Foto do usuário"
                           className="w-full h-full object-cover bg-gradient-to-br from-blue-400 to-blue-600"

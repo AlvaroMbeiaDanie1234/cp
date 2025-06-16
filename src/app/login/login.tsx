@@ -17,7 +17,6 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
-  CheckCircle,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -52,7 +51,7 @@ export default function LoginScreen() {
     // Simular autenticação
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    if (email === "josefina.manuel@pn.gov.ao" && password === "jose123") {
+    if (email === "admin@pn.gov.ao" && password === "admin") {
       // Login bem-sucedido
       setIsLoading(false);
       router.push("/painel"); // Redirect to dashboard

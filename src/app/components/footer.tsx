@@ -20,7 +20,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center transition-transform hover:scale-105">
-                <img src="/images/logo.png" alt="" />
+                <Image property="logo" src="/images/logo.png" alt="" />
               </div>
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight">Polícia Nacional</h3>
