@@ -264,6 +264,7 @@ export default function News() {
                     >
                       <div className="relative aspect-video overflow-hidden">
                         <Image
+                           property="og:image"
                           src={item.image || "/placeholder.svg"}
                           alt={item.title}
                           fill
@@ -362,6 +363,7 @@ export default function News() {
                   >
                     <div className="relative aspect-video overflow-hidden">
                       <Image
+                        property="og:image"
                         src={item.image || "/placeholder.svg"}
                         alt={item.title}
                         fill
