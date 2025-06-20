@@ -1,8 +1,6 @@
-
-// File: components/Usuarios.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
@@ -27,16 +25,67 @@ import {
   Edit,
   Settings,
   Trash2,
+  AlertCircle,
 } from "lucide-react"
-import { mockUsuarios, getStatusBadge } from "../utils/data"
+import { loginService } from "@/app/core/services/loginService"
 import UsuarioModal from "./modals/usuariosModal"
+import { usuarioService } from "./services/userService"
+
+
+interface User {
+  id: number
+  fullName: string
+  email: string
+  created_at: string
+  role: 'utilizador' | 'operador' | 'admin'
+}
 
 interface UsuariosProps {
   activeTab: string
 }
 
-export default function Usuarios({  }: UsuariosProps) {
+export default function Usuarios({ activeTab }: UsuariosProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [users, setUsers] = useState<User[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    const currentUser = loginService.getCurrentUser()
+    setUserRole(currentUser?.role || null)
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      const data = await usuarioService.getUsers()
+      setUsers(data)
+      setError(null)
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'usuarios' && userRole === 'admin') {
+      fetchUsers()
+    }
+  }, [activeTab, userRole])
+
+  if (userRole !== 'admin') {
+    return (
+      <TabsContent value="usuarios" className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-white">Gestão de Usuários</h2>
+        </div>
+        <Card className="bg-red-500/10 backdrop-blur-md border-red-500/20 shadow-xl p-6">
+          <div className="flex items-center gap-2 text-red-200">
+            <AlertCircle className="w-5 h-5" />
+            <p>Acesso negado: Apenas administradores podem visualizar esta página.</p>
+          </div>
+        </Card>
+      </TabsContent>
+    )
+  }
 
   return (
     <TabsContent value="usuarios" className="space-y-6">
@@ -48,35 +97,42 @@ export default function Usuarios({  }: UsuariosProps) {
         </Button>
       </div>
 
-      <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-xl">
+      {error && (
+        <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200">
+          {error}
+        </div>
+      )}
+
+      <Card className="bg-white/10 backdrop-blur-md border-blue-200/20 shadow-xl">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-white/10">
+            <TableRow className="border-b border-blue-200/20">
+              <TableHead className="text-blue-200">ID</TableHead>
               <TableHead className="text-blue-200">Nome</TableHead>
               <TableHead className="text-blue-200">Email</TableHead>
-              <TableHead className="text-blue-200">Órgão</TableHead>
-              <TableHead className="text-blue-200">Cargo</TableHead>
-              <TableHead className="text-blue-200">Status</TableHead>
-              <TableHead className="text-blue-200">Último Acesso</TableHead>
+              <TableHead className="text-blue-200">Função</TableHead>
+              <TableHead className="text-blue-200">Data de registo</TableHead>
               <TableHead className="text-blue-200">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockUsuarios.map((usuario) => (
+            {users.map((usuario) => (
               <TableRow
                 key={usuario.id}
-                className="border-b border-white/10 hover:bg-white/5"
+                className="border-b border-blue-200/20 hover:bg-blue-200/5"
               >
-                <TableCell className="font-medium text-white">{usuario.nome}</TableCell>
+                <TableCell className="text-blue-200">{usuario.id}</TableCell>
+                <TableCell className="font-medium text-white">{usuario.fullName}</TableCell>
                 <TableCell className="text-blue-200">{usuario.email}</TableCell>
-                <TableCell className="max-w-48 truncate text-blue-200">
-                  {usuario.orgao}
-                </TableCell>
-                <TableCell className="text-blue-200">{usuario.cargo}</TableCell>
-                <TableCell>{getStatusBadge(usuario.status)}</TableCell>
                 <TableCell className="text-blue-200">
-                  {new Date(usuario.ultimoAcesso).toLocaleDateString("pt-AO")}
+                  {usuario.role.charAt(0).toUpperCase() + usuario.role.slice(1)}
                 </TableCell>
+                <TableCell className="text-blue-200">
+                  {new Date(usuario.created_at).toLocaleDateString('pt-PT', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                  })}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -90,7 +146,7 @@ export default function Usuarios({  }: UsuariosProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
-                      className="bg-white/10 backdrop-blur-md border-white/20 text-white"
+                      className="bg-white/10 backdrop-blur-md border-blue-200/20 text-white"
                     >
                       <DropdownMenuItem>
                         <Eye className="w-4 h-4 mr-2" />
@@ -117,7 +173,13 @@ export default function Usuarios({  }: UsuariosProps) {
         </Table>
       </Card>
 
-      <UsuarioModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <UsuarioModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          fetchUsers() // Refresh user list after registration
+        }}
+      />
     </TabsContent>
   )
 }

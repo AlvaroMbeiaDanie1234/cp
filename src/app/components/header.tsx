@@ -114,6 +114,15 @@ export default function Header() {
               ))}
               {/* Botão Entrar (Mobile) */}
               <Link
+                href="/register"
+                className="border-2 border-yellow-400 text-gray-700 hover:bg-yellow-100 font-medium text-lg px-4 py-2 mx-4 rounded-md transition-colors duration-300"
+                onClick={() => setIsMenuOpen(false)}
+                aria-label="Criar conta"
+              >
+                Criar conta
+              </Link>
+
+              <Link
                 href="/login"
                 className="border-2 border-yellow-400 text-gray-700 hover:bg-yellow-100 font-medium text-lg px-4 py-2 mx-4 rounded-md transition-colors duration-300"
                 onClick={() => setIsMenuOpen(false)}

@@ -1,13 +1,12 @@
-
 "use client";
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; // Use next/navigation, not next/router
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/label"; // Use @/components/ui/label, not @radix-ui/react-label
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Eye,
@@ -20,13 +19,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { loginService } from "../core/services/loginService";
 
-// Pre-defined particle properties to avoid Math.random()
+// Pre-defined particle properties
 const particles = Array.from({ length: 20 }, (_, i) => ({
-  left: `${(i * 5) % 100}%`, // Spread particles evenly (0%, 5%, 10%, ..., 95%)
-  top: `${(i * 10) % 100}%`, // Different vertical positions
-  animationDelay: `${(i % 5) * 1}s`, // Delays: 0s, 1s, 2s, 3s, 4s
-  animationDuration: `${3 + (i % 4)}s`, // Durations: 3s, 4s, 5s, 6s
+  left: `${(i * 5) % 100}%`,
+  top: `${(i * 10) % 100}%`, // Fixed 'email' to 'top'
+  animationDelay: `${(i % 5) * 1}s`,
+  animationDuration: `${3 + (i % 4)}s`,
 }));
 
 export default function LoginScreen() {
@@ -48,15 +48,16 @@ export default function LoginScreen() {
     setIsLoading(true);
     setLoginError("");
 
-    // Simular autenticação
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    if (email === "josefina.manuel@pn.gov.ao" && password === "jose123") {
-      // Login bem-sucedido
-      setIsLoading(false);
-      router.push("/painel"); // Redirect to dashboard
-    } else {
-      setLoginError("Email ou senha incorretos");
+    try {
+      const { user } = await loginService.login(email, password);
+      if (user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/painel");
+      }
+    } catch (err: any) {
+      setLoginError(err.message || "Email ou senha incorretos");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -64,9 +65,9 @@ export default function LoginScreen() {
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#041B4E]">
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap");
         .footer-text {
-          font-family: 'Poppins', sans-serif;
+          font-family: "Poppins", sans-serif;
           font-weight: 700;
         }
         @keyframes blob {

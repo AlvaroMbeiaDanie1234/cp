@@ -1,18 +1,17 @@
-// File: app/modals/NoticiaModal.tsx
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Upload } from "lucide-react"
-import Image from "next/image"
+import { useState, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Upload } from 'lucide-react'
+import Image from 'next/image'
+import { noticiaService } from '../services/noticiaService'
 
 interface Noticia {
-  id?: string
-  imagem: string | null
+  id: number
+  imagem: string
   titulo: string
   conteudo: string
-  categoria: "Destaque" | "Categoria"
-  autor?: string
-  dataPublicacao?: string
-  estado?: "Publicado" | "Rascunho" | "Arquivado"
+  categoria: 'normal' | 'destaque'
+  user_id: number
+  created_at: string
 }
 
 interface NoticiaModalProps {
@@ -23,29 +22,30 @@ interface NoticiaModalProps {
 
 export default function NoticiaModal({ isOpen, onClose, noticia }: NoticiaModalProps) {
   const [formData, setFormData] = useState({
-    imagem: null as File | null,
-    titulo: "",
-    conteudo: "",
-    categoria: "Destaque" as "Destaque" | "Categoria",
+    imagem: undefined as File | string | undefined,
+    titulo: '',
+    conteudo: '',
+    categoria: 'destaque' as 'normal' | 'destaque',
   })
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [preview, setPreview] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (noticia) {
       setFormData({
-        imagem: null,
-        titulo: noticia.titulo || "",
-        conteudo: noticia.conteudo || "",
-        categoria: noticia.categoria || "Destaque",
+        imagem: undefined,
+        titulo: noticia.titulo || '',
+        conteudo: noticia.conteudo || '',
+        categoria: noticia.categoria || 'destaque',
       })
       setPreview(noticia.imagem || null)
     } else {
       setFormData({
-        imagem: null,
-        titulo: "",
-        conteudo: "",
-        categoria: "Destaque",
+        imagem: undefined,
+        titulo: '',
+        conteudo: '',
+        categoria: 'destaque',
       })
       setPreview(null)
     }
@@ -57,52 +57,79 @@ export default function NoticiaModal({ isOpen, onClose, noticia }: NoticiaModalP
       setPreview(URL.createObjectURL(value))
     } else {
       setFormData((prev) => ({ ...prev, [field]: value }))
+      if (field === 'imagem') {
+        setPreview(value || null)
+      }
     }
-    setErrors((prev) => ({ ...prev, [field]: "" }))
+    setErrors((prev) => ({ ...prev, [field]: '' }))
   }
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {}
-    if (!formData.titulo.trim()) newErrors.titulo = "Obrigatório"
-    if (!formData.conteudo.trim()) newErrors.conteudo = "Obrigatório"
+    if (!formData.titulo.trim()) newErrors.titulo = 'Obrigatório'
+    if (!formData.conteudo.trim()) newErrors.conteudo = 'Obrigatório'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (validateForm()) {
-      console.log("Notícia registrada:", {
-        id: noticia ? noticia.id : `new-${Date.now()}`,
-        ...formData,
-        imagem: preview || null,
-      })
+    if (!validateForm()) return
+
+    setIsSubmitting(true)
+    try {
+      const data = {
+        imagem: formData.imagem,
+        titulo: formData.titulo,
+        conteudo: formData.conteudo,
+        categoria: formData.categoria,
+      }
+
+      if (noticia) {
+        await noticiaService.updateNoticia(noticia.id, data)
+      } else {
+        await noticiaService.createNoticia(data)
+      }
       onClose()
       setFormData({
-        imagem: null,
-        titulo: "",
-        conteudo: "",
-        categoria: "Destaque",
+        imagem: undefined,
+        titulo: '',
+        conteudo: '',
+        categoria: 'destaque',
       })
       setPreview(null)
+    } catch (error: any) {
+      setErrors({ submit: error.message || 'Falha ao salvar notícia' })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto bg-white/10 backdrop-blur-md border-white/20 text-white">
-        <DialogHeader className="flex flex-row items-center justify-between">
+        <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {noticia ? "Editar Notícia" : "Registar Notícia"}
+            {noticia ? 'Editar Notícia' : 'Registar Notícia'}
           </DialogTitle>
-          
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="imagem" className="text-blue-200 block">Imagem</label>
             <div className="flex items-center gap-4">
-              {preview && <Image property="img" src={preview} alt="Preview" className="w-16 h-16 rounded object-cover" />}
-              <button type="button" className="bg-white/5 border-white/20 text-white border rounded-md p-2 hover:bg-blue-600 flex items-center gap-2">
+              {preview && (
+                <Image
+                  src={preview}
+                  alt="Preview"
+                  width={64}
+                  height={64}
+                  className="rounded object-cover"
+                />
+              )}
+              <button
+                type="button"
+                className="bg-white/5 border-white/20 text-white border rounded-md p-2 hover:bg-blue-600 flex items-center gap-2"
+              >
                 <Upload className="w-4 h-4" /> Carregar Imagem
                 <input
                   type="file"
@@ -110,7 +137,7 @@ export default function NoticiaModal({ isOpen, onClose, noticia }: NoticiaModalP
                   name="imagem"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => e.target.files && handleChange(e.target.files[0], "imagem")}
+                  onChange={(e) => e.target.files && handleChange(e.target.files[0], 'imagem')}
                 />
               </button>
             </div>
@@ -123,7 +150,7 @@ export default function NoticiaModal({ isOpen, onClose, noticia }: NoticiaModalP
               id="titulo"
               name="titulo"
               value={formData.titulo}
-              onChange={(e) => handleChange(e.target.value, "titulo")}
+              onChange={(e) => handleChange(e.target.value, 'titulo')}
               placeholder="Título da notícia"
               className="w-full p-2 bg-white/5 border-white/20 rounded-full text-white border focus:ring focus:ring-blue-500 outline-none"
             />
@@ -135,7 +162,7 @@ export default function NoticiaModal({ isOpen, onClose, noticia }: NoticiaModalP
               id="conteudo"
               name="conteudo"
               value={formData.conteudo}
-              onChange={(e) => handleChange(e.target.value, "conteudo")}
+              onChange={(e) => handleChange(e.target.value, 'conteudo')}
               placeholder="Conteúdo da notícia"
               className="w-full p-2 bg-white/5 border-white/20 rounded-md text-white border focus:ring focus:ring-blue-500 outline-none h-32 resize-y"
             />
@@ -147,20 +174,29 @@ export default function NoticiaModal({ isOpen, onClose, noticia }: NoticiaModalP
               id="categoria"
               name="categoria"
               value={formData.categoria}
-              onChange={(e) => handleChange(e.target.value, "categoria")}
+              onChange={(e) => handleChange(e.target.value, 'categoria')}
               className="w-full p-2 bg-white/5 border-white/20 rounded-full text-white border focus:ring focus:ring-blue-500 outline-none"
             >
-              <option value="Destaque" className="bg-white/10 text-white">Destaque</option>
-              <option value="Categoria" className="bg-white/10 text-white">Categoria</option>
+              <option value="destaque" className="bg-white/10 text-white">Destaque</option>
+              <option value="normal" className="bg-white/10 text-white">Normal</option>
             </select>
             {errors.categoria && <span className="text-red-300 text-sm mt-1 block">{errors.categoria}</span>}
           </div>
+          {errors.submit && <span className="text-red-300 text-sm block">{errors.submit}</span>}
           <DialogFooter>
-            <button type="button" className="text-white bg-transparent hover:bg-white/20 p-2 rounded" onClick={onClose}>
+            <button
+              type="button"
+              className="text-white bg-transparent hover:bg-white/20 p-2 rounded"
+              onClick={onClose}
+            >
               Cancelar
             </button>
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">
-              {noticia ? "Salvar" : "Registar"}
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Salvando...' : noticia ? 'Salvar' : 'Registar'}
             </button>
           </DialogFooter>
         </form>
